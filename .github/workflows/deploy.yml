@@ -1,0 +1,73 @@
+name: Deploy Helm Charts
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
+  GITHUB_REPOSITORY: ${{ github.event.repository.name }}
+
+jobs:
+  deploy:
+    name: Deploy Helm Charts
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: latest
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update && sudo apt-get install -y curl
+
+      - name: Create Public Directory
+        run: |
+          mkdir -p ./public/charts/
+
+      - name: Package Helm Charts
+        run: helm package charts/* --destination ./public
+
+      - name: Fetch Existing index.yaml (if available)
+        run: |
+          INDEX_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$INDEX_URL/index.yaml")
+          
+          if [ "$HTTP_STATUS" -eq 200 ]; then
+              # Ensure the target directory exists
+              mkdir -p ./public
+              curl -o ./public/index.yaml "$INDEX_URL/index.yaml"
+              # Fetch additional charts listed in the index.yaml
+              for TGZ in $(grep -o 'http.*tgz' ./public/index.yaml); do
+                  curl --output-dir ./public -O "$TGZ"
+              done
+              helm repo index ./public --url "$INDEX_URL" --merge ./public/index.yaml
+          else
+              # If index.yaml doesn't exist, create a new index
+              helm repo index ./public --url "$INDEX_URL"
+          fi
+
+      - name: Upload Artifacts for GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public/
+
+  deploy-pages:
+    name: Deploy to GitHub Pages
+    runs-on: ubuntu-latest
+    needs: deploy
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4

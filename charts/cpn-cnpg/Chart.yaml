@@ -16,4 +16,4 @@ name: cpn-cnpg
 sources:
 - https://github.com/cloud-pi-native/helm-charts
 type: application
-version: 2.0.0
+version: 2.0.1

@@ -10,7 +10,7 @@ instances: 3
 # -- Name of the image used for database.
 # By default (empty string), the operator will install the latest available minor version of the latest major version of PostgreSQL when the operator was released
 imageName: ""
-# -- Name of the image pull secrets  
+# -- Name of the image pull secrets.
 imagePullSecrets: ""
 # -- Username of the database user.
 username: "username"
@@ -55,6 +55,12 @@ exposed: false
 nodePort:
 # -- Mode used to deploy the cnpg cluster, it should be `primary`, `replica` or `restore`.
 mode: "primary"
+# -- Only when mode: "primary" to allow choice of database user and password.
+initSecret:
+  enabled: false
+  secretName: ""
+  username: ""
+  password: ""
 replica:
   # -- Primary cnpg cluster host used for replica mode.
   host: ""
@@ -109,9 +115,29 @@ backup:
   # -- Retention policy for cnpg backups recurrences.
   retentionPolicy: "14d"
 
+# -- CNPG Pooler configuration
+pooler:
+  # -- Enabling or disabling PgBouncer Pooler
+  enabled: false
+  # -- Number of PgBouncer pods
+  instances: 3
+  # -- Type of PgBouncer connexion
+  poolMode: session
+  # -- Parameters to configure PgBouncer (see https://www.pgbouncer.org/config.html#section-databases)
+  parameters:
+    max_client_conn: "1000"
+    default_pool_size: "100"
+
 # -- Whether or not PodMonitor should be deployed.
 monitoring:
+  # -- Specifies whether the monitoring should be enabled. Requires Prometheus Operator CRDs.
   enabled: false
+  # -- Metrics relabel configurations to apply to samples before ingestion.
+  podMonitorMetricRelabelings: []
+  # -- Relabel configurations to apply to samples before scraping.
+  podMonitorRelabelings: []
+  # -- Additional labels for the podMonitor
+  podMonitorAdditionalLabels: {}
 
 # CNPG operator configuration
 cnpg-operator:

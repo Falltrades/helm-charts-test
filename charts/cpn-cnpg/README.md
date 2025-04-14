@@ -1,6 +1,6 @@
 # cpn-cnpg
 
-![Version: 2.0.0](https://img.shields.io/badge/Version-2.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
+![Version: 2.3.0](https://img.shields.io/badge/Version-2.3.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
 
 A Helm Chart to deploy easily a CNPG cluster
 
@@ -51,12 +51,24 @@ A Helm Chart to deploy easily a CNPG cluster
 | exposed | bool | `false` | Whether or not a NodePort service should be created to exposed the database. |
 | fullnameOverride | string | `""` | String to fully override the default application name. |
 | imageName | string | `""` | Name of the image used for database. By default (empty string), the operator will install the latest available minor version of the latest major version of PostgreSQL when the operator was released |
+| imagePullSecrets | string | `""` | Name of the image pull secrets. |
+| initSecret | object | `{"enabled":false,"password":"","secretName":"","username":""}` | Only when mode: "primary" to allow choice of database user and password. |
 | instances | int | `3` | Number of instances to spawn in the cluster. |
 | labels | object | `{}` | Additional cnpg cluster labels. |
 | mode | string | `"primary"` | Mode used to deploy the cnpg cluster, it should be `primary`, `replica` or `restore`. |
+| monitoring | object | `{"enabled":false,"podMonitorAdditionalLabels":{},"podMonitorMetricRelabelings":[],"podMonitorRelabelings":[]}` | Whether or not PodMonitor should be deployed. |
+| monitoring.enabled | bool | `false` | Specifies whether the monitoring should be enabled. Requires Prometheus Operator CRDs. |
+| monitoring.podMonitorAdditionalLabels | object | `{}` | Additional labels for the podMonitor |
+| monitoring.podMonitorMetricRelabelings | list | `[]` | Metrics relabel configurations to apply to samples before ingestion. |
+| monitoring.podMonitorRelabelings | list | `[]` | Relabel configurations to apply to samples before scraping. |
 | nameOverride | string | `""` | Provide a name in place of the default application name. |
 | nodePort | string | `nil` | Port used for NodePort service. Needs `exposed` tu be true. |
 | parameters | object | `{}` | Customize Postgresql parameters. |
+| pooler | object | `{"enabled":false,"instances":3,"parameters":{"default_pool_size":"100","max_client_conn":"1000"},"poolMode":"session"}` | CNPG Pooler configuration |
+| pooler.enabled | bool | `false` | Enabling or disabling PgBouncer Pooler |
+| pooler.instances | int | `3` | Number of PgBouncer pods |
+| pooler.parameters | object | `{"default_pool_size":"100","max_client_conn":"1000"}` | Parameters to configure PgBouncer (see https://www.pgbouncer.org/config.html#section-databases) |
+| pooler.poolMode | string | `"session"` | Type of PgBouncer connexion |
 | primaryUpdateStrategy | string | `"unsupervised"` | Rolling update strategy used : unsupervised: automated update of the primary once all replicas have been upgraded (default) supervised: requires manual supervision to perform the switchover of the primary |
 | pvcSize.data | string | `"10Gi"` | Size of the data PVC used by each cnpg instance. |
 | pvcSize.wal | string | `"5Gi"` | Size of the WAL PVC used by each cnpg instance (if value is `null` then WAL files are stored within the data PVC). |
